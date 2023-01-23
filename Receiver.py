@@ -6,6 +6,7 @@ time_start = time.localtime()
 time_stop = time.localtime()
 
 broker = "kolkorzyzyk.duckdns.org"
+port = 1883
 # broker = "127.0.0.1"
 # broker = "10.0.0.1"
 
@@ -15,7 +16,8 @@ client = mqtt.Client()
 def connect_to_broker():
     # Connect to the broker.
     # client.username_pw_set('user-broker', 'P@ssw0rd')
-    client.connect(broker, 1883)
+    client.connect(broker, port)
+
 
     # Send message about conenction.
     client.on_connect = "connected"
