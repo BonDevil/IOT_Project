@@ -107,6 +107,81 @@ def checkForWin():
         return 0
 
 
+def displayBoard():
+    global board
+    global position
+    disp = SSD1331.SSD1331()
+
+    # Initialize library.
+    disp.Init()
+    # Clear display.
+    disp.clear()
+
+    # Create blank image for drawing.
+    image1 = Image.new("RGB", (disp.width, disp.height), "WHITE")
+    draw = ImageDraw.Draw(image1)
+    fontLarge = ImageFont.truetype('./lib/oled/Font.ttf', 15)
+
+    # Create lines
+    draw.line([(0, 21), (95, 21)], fill="BLACK", width=5)
+    draw.line([(0, 42), (95, 42)], fill="BLACK", width=5)
+    draw.line([(32, 0), (32, 63)], fill="BLACK", width=5)
+    draw.line([(64, 0), (64, 63)], fill="BLACK", width=5)
+
+
+    #fill
+    for i in range(3):
+        if board[i]==1:
+            draw.text((8+i*32, 16), 'X', font=fontLarge, fill="BLACK")
+
+        elif(board[i]==-1):
+            draw.text((8+i*32, 16), 'O', font=fontLarge, fill="BLACK")
+
+    for i in range(3,6):
+        if board[i]==1:
+            draw.text((8+(i-3)*32, 37), 'X', font=fontLarge, fill="BLACK")
+
+        elif(board[i]==-1):
+            draw.text((8+(i-3)*32, 37), 'O', font=fontLarge, fill="BLACK")
+
+    for i in range(6,9):
+        if board[i]==1:
+            draw.text((8+(i-6)*32, 58), 'X', font=fontLarge, fill="BLACK")
+
+        elif(board[i]==-1):
+            draw.text((8+(i-6)*32, 58), 'O', font=fontLarge, fill="BLACK")
+
+
+    #currentPosision
+    match position:
+        case 0:
+            draw.rectangle([(0, 0), (32, 21)], fill="BLUE")
+        case 1:
+            draw.rectangle([(32, 0), (64, 21)], fill="BLUE")
+        case 2:
+            draw.rectangle([(64, 0), (95, 21)], fill="BLUE")
+        case 3:
+            draw.rectangle([(0, 21), (32, 42)], fill="BLUE")
+        case 4:
+            draw.rectangle([(32, 21), (64, 42)], fill="BLUE")
+        case 5:
+            draw.rectangle([(64, 21), (95, 42)], fill="BLUE")
+        case 6:
+            draw.rectangle([(0, 42), (32, 63)], fill="BLUE")
+        case 7:
+            draw.rectangle([(32, 42), (64, 63)], fill="BLUE")
+        case 8:
+            draw.rectangle([(64, 42), (95, 63)], fill="BLUE")
+
+
+    disp.ShowImage(image1, 0, 0)
+    time.sleep(2)
+
+
+
+
+
+
 def run():
     GPIO.add_event_detect(buttonRed, GPIO.FALLING, callback=buttonRedPressedCallback, bouncetime=200)
     GPIO.add_event_detect(buttonGreen, GPIO.FALLING, callback=buttonGreenPressedCallback, bouncetime=200)
