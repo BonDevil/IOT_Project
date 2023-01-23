@@ -5,14 +5,6 @@ from config import *
 import RPi.GPIO as GPIO
 import time
 
-board = [
-    0, 0, 0,
-    0, 0, 0,
-    0, 0, 0
-]
-
-position = 0
-
 greenButtonClicked = False
 
 
@@ -33,25 +25,33 @@ def randomOrder():
     return random.randint(1, 2)
 
 
+def encoderLeft():
+    global position
+    global board
+    while board[position] != 0:
+        if position == 0:
+            position = 8
+        else:
+            position -= 1
+
+
+def encoderRight():
+    global position
+    global board
+    while board[position] != 0:
+        if position == 8:
+            position = 0
+        else:
+            position += 1
+
+
+def resetPointer():
+    global position
+    position = 8
+    encoderRight()
+
+
 def myTurn():
-    def encoderLeft():
-        global position
-        global board
-        while board[position] != 0:
-            if position == 0:
-                position = 8
-            else:
-                position -= 1
-
-    def encoderRight():
-        global position
-        global board
-        while board[position] != 0:
-            if position == 8:
-                position = 0
-            else:
-                position += 1
-
     global greenButtonClicked
     greenButtonClicked = False
 
@@ -114,6 +114,7 @@ def run():
     turn = 1
 
     while 1:
+        resetPointer()
         if turn % 2 == 0:
             opponentsTurn()
         else:
@@ -129,4 +130,12 @@ def run():
 
 
 if __name__ == "__main__":
-    run()
+    while 1:
+        board = [
+            0, 0, 0,
+            0, 0, 0,
+            0, 0, 0
+        ]
+        position = 0
+        run()
+        print("add win and lose to stats based on run() return")
