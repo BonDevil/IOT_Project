@@ -88,7 +88,7 @@ def get_player_by_rfid(rfid):
 
 
 # it doesn't check if RFID already exists in database
-def insert_player(rfid, name, wins=0, defeats=0):
+def insert_player(rfid, name, wins=0, defeats=0, draws=0):
     conn = None
     try:
         # read connection parameters
@@ -101,7 +101,8 @@ def insert_player(rfid, name, wins=0, defeats=0):
         cur = conn.cursor()
 
         # execute an INSERT statement
-        cur.execute("INSERT INTO Player (RFID, name, wins, defeats) VALUES (%s, %s, %s, %s)", (rfid, name, wins, defeats))
+        cur.execute("INSERT INTO Player (RFID, name, wins, defeats, draws) VALUES (%s, %s, %s, %s, %s)",
+                    (rfid, name, wins, defeats, draws))
 
         # commit changes to the database
         conn.commit()
@@ -194,6 +195,38 @@ def add_loose_to_player(rfid):
 
         # execute an update statement
         cur.execute("UPDATE Player SET defeats = defeats + 1 WHERE RFID = %s", (rfid,))
+
+        # commit changes to the database
+        conn.commit()
+
+        # close the communication with the PostgreSQL
+        cur.close()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if conn is not None:
+            conn.close()
+            print('Database connection closed.')
+
+
+# it doesn't check if RFID already exists in database
+def add_draw_to_players(rfid1, rfid2):
+    """Add a loose to a player in the Player table"""
+    conn = None
+    try:
+        # read connection parameters
+        params = config()
+
+        # connect to the PostgreSQL server
+        conn = psycopg2.connect(**params)
+
+        # create a cursor
+        cur = conn.cursor()
+
+        # execute an update statement
+        cur.execute("UPDATE Player SET draws = draws + 1 WHERE RFID = %s", (rfid1,))
+        cur.execute("UPDATE Player SET draws = draws + 1 WHERE RFID = %s", (rfid2,))
+
 
         # commit changes to the database
         conn.commit()
