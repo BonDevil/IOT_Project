@@ -17,13 +17,8 @@ def buttonGreenPressedCallback(channel):
     greenButtonClicked = True
     global position
     global board
-    board[position] = 1
+    board[position] = -1
     print("send chosen position to opponent")
-
-
-def randomOrder():
-    return random.randint(1, 2)
-
 
 def encoderLeft():
     global position
@@ -76,7 +71,7 @@ def opponentsTurn():
     while 1:
         print("checking for opponents move"
               "get position"
-              "board[position] = -1")
+              "board[position] = 1")
         time.sleep(1)
 
 
@@ -178,23 +173,26 @@ def displayBoard():
     time.sleep(2)
 
 
+
+
+
+
 def run():
     GPIO.add_event_detect(buttonRed, GPIO.FALLING, callback=buttonRedPressedCallback, bouncetime=200)
     GPIO.add_event_detect(buttonGreen, GPIO.FALLING, callback=buttonGreenPressedCallback, bouncetime=200)
-    order = randomOrder()
+    
+    print("wait for order value from opponent")
     turn = 1
     
     if order == 1:
         turn += 1
 
-    print("send order to opponent")
-
     while 1:
         resetPointer()
         if turn % 2 == 0:
-            opponentsTurn()
-        else:
             myTurn()
+        else:
+            opponentsTurn()
 
         result = checkForWin()
         if result != 0:

@@ -3,30 +3,35 @@ import RPi.GPIO as GPIO
 import time
 from mfrc522 import MFRC522
 import paho.mqtt.client as mqtt
-import psycopg2
-from Database.DatabaseHandler import get_players_rfid
+from DatabaseHandler import get_players_rfid, insert_player
+import neopixel
+import board
+from random import randint
 
 is_on = False
 time_start = time.localtime()
 time_stop = time.localtime()
 
-broker = "kolkorzyzyk.duckdns.org"
-port = 1883
+broker = "10.108.33.125"
+
 # broker = "127.0.0.1"
 # broker = "10.0.0.1"
+pixels = neopixel.NeoPixel(board.D18, 8, brightness=1.0/32, auto_write=False)
 
 client = mqtt.Client()
 
 def connect_to_broker():
- # Connect to the broker.
-    client.username_pw_set('user-broker', 'P@ssw0rd')
-    client.connect(broker, port) # Send message about conenction
+    # Connect to the broker.
+    client.connect(broker) # Send message about conenction
 
 def disconnect_from_broker():
      client.disconnect()
 # Send message about disconenction.
 #  call_worker("Client disconnected")
 # Disconnet the client.
+def call_worker(rfid, player_name):
+    client.publish("demo/one", rfid + "." + player_name)
+
 
 def rfidRead():
     global is_on
@@ -66,11 +71,14 @@ def rfidRead():
             # print(uids_tuples)
             # uids = [elem[1] for elem in uids_tuples]
             uids = get_players_rfid()
+            print(uids)
                        
                            
             if str(num) not in uids:
                 print(f"Card read UID: {uid} > {num}")
-                call_worker(str(num))
+                player_name = input("Podaj nazwe gracza: ")
+                insert_player(str(num), player_name)
+                call_worker(str(num), player_name)
                 time.sleep(0.5)
                 buzzer(True)
                 pixels.fill((randint(0, 255), randint(0, 255), randint(0, 255)))
@@ -79,6 +87,8 @@ def rfidRead():
                 pixels.fill((0, 0, 0))
                 pixels.show()
                 buzzer(False)
+                
+                
     is_on = False
     buzzer(False)
     GPIO.output(led1, False)

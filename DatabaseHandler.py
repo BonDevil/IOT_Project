@@ -1,37 +1,60 @@
 from configparser import ConfigParser
 
-import psycopg2
+import sqlite3
 
 from Player import Player
+import os
 
+def create_database():
+    if os.path.exists("iot_database.db"):
+        os.remove("iot_database.db")
+        print("Old database removed.")
+    connection = sqlite3.connect("iot_database.db")
+    cursor = connection.cursor()
+    cursor.execute("""
+        CREATE TABLE Player (
+        RFID varchar(255),
+        name varchar(255),
+        wins int,
+        defeats int,
+        draws int,
+        PRIMARY KEY(RFID),
+        CHECK (wins >= 0),
+        CHECK (defeats >= 0),
+        CHECK (draws >= 0)
+        );
+"""
+    )
+    connection.commit()
+    connection.close()
+    print("New database created")
 
-def config(filename=r"C:\Users\Piotr\PycharmProjects\IOT_Project\Database\Database.ini", section='postgresql'):
-    # create a parser
-    parser = ConfigParser()
-    # read config file
-    parser.read(filename)
+# def config(filename=r"Database.ini", section='postgresql'):
+#     # create a parser
+#     parser = ConfigParser()
+#     # read config file
+#     parser.read(filename)
 
-    # get section, default to postgresql
-    db = {}
-    if parser.has_section(section):
-        params = parser.items(section)
-        for param in params:
-            db[param[0]] = param[1]
-    else:
-        raise Exception('Section {0} not found in the {1} file'.format(section, filename))
+#     # get section, default to postgresql
+#     db = {}
+#     if parser.has_section(section):
+#         params = parser.items(section)
+#         for param in params:
+#             db[param[0]] = param[1]
+#     else:
+#         raise Exception('Section {0} not found in the {1} file'.format(section, filename))
 
-    return db
+#     return db
 
 
 def get_players_rfid():
     """Retrieve all Player's RFID from the database"""
     conn = None
     try:
-        # read connection parameters
-        params = config()
+
 
         # connect to the PostgreSQL server
-        conn = psycopg2.connect(**params)
+        conn = sqlite3.connect("iot_database.db")
 
         # create a cursor
         cur = conn.cursor()
@@ -49,7 +72,7 @@ def get_players_rfid():
         rfid_list = [rfid[0] for rfid in rfid_tuples]
 
         return rfid_list
-    except (Exception, psycopg2.DatabaseError) as error:
+    except (Exception, sqlite3.DatabaseError) as error:
         print(error)
     finally:
         if conn is not None:
@@ -60,11 +83,10 @@ def get_player_by_rfid(rfid):
     """Retrieve all Player's RFID from the database"""
     conn = None
     try:
-        # read connection parameters
-        params = config()
+
 
         # connect to the PostgreSQL server
-        conn = psycopg2.connect(**params)
+        conn = sqlite3.connect("iot_database.db")
 
         # create a cursor
         cur = conn.cursor()
@@ -80,7 +102,7 @@ def get_player_by_rfid(rfid):
         cur.close()
 
         return player
-    except (Exception, psycopg2.DatabaseError) as error:
+    except (Exception, sqlite3.DatabaseError) as error:
         print(error)
     finally:
         if conn is not None:
@@ -91,17 +113,15 @@ def get_player_by_rfid(rfid):
 def insert_player(rfid, name, wins=0, defeats=0, draws=0):
     conn = None
     try:
-        # read connection parameters
-        params = config()
 
         # connect to the PostgreSQL server
-        conn = psycopg2.connect(**params)
+        conn = sqlite3.connect("iot_database.db")
 
         # create a cursor
         cur = conn.cursor()
 
         # execute an INSERT statement
-        cur.execute("INSERT INTO Player (RFID, name, wins, defeats, draws) VALUES (%s, %s, %s, %s, %s)",
+        cur.execute("INSERT INTO Player (RFID, name, wins, defeats, draws) VALUES (?,?,?,?,?)",
                     (rfid, name, wins, defeats, draws))
 
         # commit changes to the database
@@ -109,7 +129,7 @@ def insert_player(rfid, name, wins=0, defeats=0, draws=0):
 
         # close the communication with the PostgreSQL
         cur.close()
-    except (Exception, psycopg2.DatabaseError) as error:
+    except (Exception, sqlite3.DatabaseError) as error:
         print(error)
     finally:
         if conn is not None:
@@ -120,11 +140,9 @@ def get_all_players():
     """Retrieve all players from the database"""
     conn = None
     try:
-        # read connection parameters
-        params = config()
 
         # connect to the PostgreSQL server
-        conn = psycopg2.connect(**params)
+        conn = sqlite3.connect("iot_database.db")
 
         # create a cursor
         cur = conn.cursor()
@@ -142,7 +160,7 @@ def get_all_players():
         players = [Player(*player_tuple) for player_tuple in players_tuples]
 
         return players
-    except (Exception, psycopg2.DatabaseError) as error:
+    except (Exception, sqlite3.DatabaseError) as error:
         print(error)
     finally:
         if conn is not None:
@@ -154,11 +172,8 @@ def add_win_to_player(rfid):
     """Add a win to a player in the Player table"""
     conn = None
     try:
-        # read connection parameters
-        params = config()
-
         # connect to the PostgreSQL server
-        conn = psycopg2.connect(**params)
+        conn = sqlite3.connect("iot_database.db")
 
         # create a cursor
         cur = conn.cursor()
@@ -171,7 +186,7 @@ def add_win_to_player(rfid):
 
         # close the communication with the PostgreSQL
         cur.close()
-    except (Exception, psycopg2.DatabaseError) as error:
+    except (Exception, sqlite3.DatabaseError) as error:
         print(error)
     finally:
         if conn is not None:
@@ -184,11 +199,9 @@ def add_loose_to_player(rfid):
     """Add a loose to a player in the Player table"""
     conn = None
     try:
-        # read connection parameters
-        params = config()
 
         # connect to the PostgreSQL server
-        conn = psycopg2.connect(**params)
+        conn = sqlite3.connect("iot_database.db")
 
         # create a cursor
         cur = conn.cursor()
@@ -201,7 +214,7 @@ def add_loose_to_player(rfid):
 
         # close the communication with the PostgreSQL
         cur.close()
-    except (Exception, psycopg2.DatabaseError) as error:
+    except (Exception, sqlite3.DatabaseError) as error:
         print(error)
     finally:
         if conn is not None:
@@ -214,11 +227,9 @@ def add_draw_to_players(rfid1, rfid2):
     """Add a loose to a player in the Player table"""
     conn = None
     try:
-        # read connection parameters
-        params = config()
 
         # connect to the PostgreSQL server
-        conn = psycopg2.connect(**params)
+        conn = sqlite3.connect("iot_database.db")
 
         # create a cursor
         cur = conn.cursor()
@@ -233,9 +244,12 @@ def add_draw_to_players(rfid1, rfid2):
 
         # close the communication with the PostgreSQL
         cur.close()
-    except (Exception, psycopg2.DatabaseError) as error:
+    except (Exception, sqlite3.DatabaseError) as error:
         print(error)
     finally:
         if conn is not None:
             conn.close()
             print('Database connection closed.')
+
+if __name__ == "__main__":
+    create_database()

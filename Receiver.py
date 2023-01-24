@@ -1,11 +1,8 @@
 import paho.mqtt.client as mqtt
-import tkinter
-import psycopg2
-import time
-from Database.DatabaseHandler import insert_player
+from DatabaseHandler import insert_player
 
 # The broker name or IP address.
-broker = "kolkorzyzyk.duckdns.org"
+broker = ""
 port = 1883
 
 # The MQTT client.
@@ -34,7 +31,7 @@ def disconnect_message(client, userdata, a):
 def connect_to_broker():
     # Connect to the broker.
     client.username_pw_set('user-broker', 'P@ssw0rd')
-    client.connect(broker, port)
+    client.connect(broker)
     # Send message about conenction.
     client.on_connect = connect_message
     client.on_disconnect = disconnect_message
