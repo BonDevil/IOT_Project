@@ -56,8 +56,39 @@ def get_players_rfid():
             conn.close()
 
 
+def get_player_by_rfid(rfid):
+    """Retrieve all Player's RFID from the database"""
+    conn = None
+    try:
+        # read connection parameters
+        params = config()
+
+        # connect to the PostgreSQL server
+        conn = psycopg2.connect(**params)
+
+        # create a cursor
+        cur = conn.cursor()
+
+        # execute a statement
+        cur.execute(f"SELECT * FROM Player WHERE RFID={rfid}")
+
+        # retrieve results
+        player = cur.fetchone()
+        print(player)
+
+        # close the communication with the PostgreSQL
+        cur.close()
+
+        return player
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if conn is not None:
+            conn.close()
+
+
 # it doesn't check if RFID already exists in database
-def insert_player(rfid, name, wins, defeats):
+def insert_player(rfid, name, wins=0, defeats=0):
     conn = None
     try:
         # read connection parameters
