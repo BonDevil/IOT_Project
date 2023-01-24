@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 import random
+import lib.oled.SSD1331 as SSD1331
+from PIL import Image, ImageDraw, ImageFont
 
 from config import *
 import RPi.GPIO as GPIO
@@ -20,9 +22,14 @@ def buttonGreenPressedCallback(channel):
     board[position] = -1
     print("send chosen position to opponent")
 
-def encoderLeft():
+
+def encoderRight():
     global position
     global board
+    if position == 0:
+        position = 8
+    else:
+        position -= 1
     while board[position] != 0:
         if position == 0:
             position = 8
@@ -30,9 +37,13 @@ def encoderLeft():
             position -= 1
 
 
-def encoderRight():
+def encoderLeft():
     global position
     global board
+    if position == 8:
+        position = 0
+    else:
+        position += 1
     while board[position] != 0:
         if position == 8:
             position = 0
@@ -50,21 +61,9 @@ def myTurn():
     global greenButtonClicked
     greenButtonClicked = False
 
-    encoderLeftPreviousState = GPIO.input(encoderLeft)
-    encoderRightPreviousState = GPIO.input(encoderRight)
-
     while not greenButtonClicked:
-        encoderLeftCurrentState = GPIO.input(encoderLeft)
-        encoderRightCurrentState = GPIO.input(encoderRight)
-
-        if encoderLeftPreviousState == 1 and encoderLeftCurrentState == 0:
-            encoderLeft()
-        if encoderRightPreviousState == 1 and encoderRightCurrentState == 0:
-            encoderRight()
-
-        print("set moved pointer on oled")
-        encoderLeftPreviousState = encoderLeftCurrentState
-        encoderRightPreviousState = encoderRightCurrentState
+        print(position)
+        displayBoard()
 
 
 def opponentsTurn():
@@ -109,8 +108,8 @@ def displayBoard():
 
     # Initialize library.
     disp.Init()
-    # Clear display.
-    disp.clear()
+
+    # disp.clear()
 
     # Create blank image for drawing.
     image1 = Image.new("RGB", (disp.width, disp.height), "WHITE")
@@ -123,76 +122,82 @@ def displayBoard():
     draw.line([(32, 0), (32, 63)], fill="BLACK", width=5)
     draw.line([(64, 0), (64, 63)], fill="BLACK", width=5)
 
-
-    #fill
+    # fill
     for i in range(3):
-        if board[i]==1:
-            draw.text((8+i*32, 16), 'X', font=fontLarge, fill="BLACK")
+        if board[i] == 1:
+            draw.text((12 + i * 32, 0), 'X', font=fontLarge, fill="BLACK")
 
-        elif(board[i]==-1):
-            draw.text((8+i*32, 16), 'O', font=fontLarge, fill="BLACK")
+        elif (board[i] == -1):
+            draw.text((12 + i * 32, 0), 'O', font=fontLarge, fill="BLACK")
 
-    for i in range(3,6):
-        if board[i]==1:
-            draw.text((8+(i-3)*32, 37), 'X', font=fontLarge, fill="BLACK")
+    for i in range(3, 6):
+        if board[i] == 1:
+            draw.text((12 + (i - 3) * 32, 21), 'X', font=fontLarge, fill="BLACK")
 
-        elif(board[i]==-1):
-            draw.text((8+(i-3)*32, 37), 'O', font=fontLarge, fill="BLACK")
+        elif (board[i] == -1):
+            draw.text((12 + (i - 3) * 32, 21), 'O', font=fontLarge, fill="BLACK")
 
-    for i in range(6,9):
-        if board[i]==1:
-            draw.text((8+(i-6)*32, 58), 'X', font=fontLarge, fill="BLACK")
+    for i in range(6, 9):
+        if board[i] == 1:
+            draw.text((12 + (i - 6) * 32, 42), 'X', font=fontLarge, fill="BLACK")
 
-        elif(board[i]==-1):
-            draw.text((8+(i-6)*32, 58), 'O', font=fontLarge, fill="BLACK")
+        elif (board[i] == -1):
+            draw.text((12 + (i - 6) * 32, 42), 'O', font=fontLarge, fill="BLACK")
 
-
-    #currentPosision
-    match position:
-        case 0:
-            draw.rectangle([(0, 0), (32, 21)], fill="BLUE")
-        case 1:
-            draw.rectangle([(32, 0), (64, 21)], fill="BLUE")
-        case 2:
-            draw.rectangle([(64, 0), (95, 21)], fill="BLUE")
-        case 3:
-            draw.rectangle([(0, 21), (32, 42)], fill="BLUE")
-        case 4:
-            draw.rectangle([(32, 21), (64, 42)], fill="BLUE")
-        case 5:
-            draw.rectangle([(64, 21), (95, 42)], fill="BLUE")
-        case 6:
-            draw.rectangle([(0, 42), (32, 63)], fill="BLUE")
-        case 7:
-            draw.rectangle([(32, 42), (64, 63)], fill="BLUE")
-        case 8:
-            draw.rectangle([(64, 42), (95, 63)], fill="BLUE")
-
+    # currentPosision
+    if (position == 0):
+        draw.rectangle([(0, 0), (32, 21)], fill="BLUE")
+    elif (position == 1):
+        draw.rectangle([(32, 0), (64, 21)], fill="BLUE")
+    elif (position == 2):
+        draw.rectangle([(64, 0), (95, 21)], fill="BLUE")
+    elif (position == 3):
+        draw.rectangle([(0, 21), (32, 42)], fill="BLUE")
+    elif (position == 4):
+        draw.rectangle([(32, 21), (64, 42)], fill="BLUE")
+    elif (position == 5):
+        draw.rectangle([(64, 21), (95, 42)], fill="BLUE")
+    elif (position == 6):
+        draw.rectangle([(0, 42), (32, 63)], fill="BLUE")
+    elif (position == 7):
+        draw.rectangle([(32, 42), (64, 63)], fill="BLUE")
+    elif (position == 8):
+        draw.rectangle([(64, 42), (95, 63)], fill="BLUE")
 
     disp.ShowImage(image1, 0, 0)
-    time.sleep(2)
+    # time.sleep(1)
 
 
+def leftPinCallback(channel):
+    if GPIO.input(27) == 0:
+        # global my_diode
+        encoderLeft()
 
 
+def rightPinCallback(channel):
+    if GPIO.input(17) == 0:
+        # global my_diode
+        encoderRight()
 
 
 def run():
     GPIO.add_event_detect(buttonRed, GPIO.FALLING, callback=buttonRedPressedCallback, bouncetime=200)
     GPIO.add_event_detect(buttonGreen, GPIO.FALLING, callback=buttonGreenPressedCallback, bouncetime=200)
-    
-    print("wait for order value from opponent")
+    GPIO.add_event_detect(17, GPIO.BOTH, callback=leftPinCallback, bouncetime=80)
+    GPIO.add_event_detect(27, GPIO.BOTH, callback=rightPinCallback, bouncetime=80)
+
+    print("wait for order from opponent")
     turn = 1
-    
+
     if order == 1:
         turn += 1
 
     while 1:
         resetPointer()
         if turn % 2 == 0:
-            myTurn()
-        else:
             opponentsTurn()
+        else:
+            myTurn()
 
         result = checkForWin()
         if result != 0:
@@ -211,5 +216,10 @@ if __name__ == "__main__":
             0, 0, 0
         ]
         position = 0
-        run()
-        print("add win and lose to stats based on run() return")
+        gameResult = run()
+        if gameResult == 0:
+            print("add draw to both players")
+        elif gameResult == 1:
+            print("add win to this player, lose to second")
+        else:
+            print("add lose to this player, win to second")
